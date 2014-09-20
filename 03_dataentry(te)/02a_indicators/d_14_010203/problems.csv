@@ -1,0 +1,10 @@
+id_phcu_ym,id_phcu_name,b00_nv_g,b00_nv_g_problem_guideline,b02_nv_g,b02_nv_g_problem_guideline,b04_nv_g,b04_nv_g_problem_guideline,b04_v_g,b04_v_g_problem_guideline,c06_nv_g,c06_nv_g_problem_guideline,c06_v_g,c06_v_g_problem_guideline,c08_v_g,c08_v_g_problem_guideline
+13011402,"Bogoa",,1,,1,0,0,0,0,0,0,7,0,0,0
+13031402,"Kangani",0,0,0,0,0,0,.a,1,0,0,0,0,0,0
+13071401,"Makombeni",0,0,0,0,0,0,.a,1,0,0,0,0,0,0
+13071403,"Makombeni",1,0,0,0,0,0,0,0,0,0,0,0,.a,1
+13081402,"Makoongwe",9,0,5,0,.a,1,0,0,0,0,0,0,0,0
+26041401,"Chukwani",18,0,1,0,0,0,0,0,0,0,.a,1,0,0
+26051401,"Fuoni",14,0,1,0,0,0,0,0,.d,1,20,0,0,0
+26051402,"Fuoni",17,0,0,0,0,0,0,0,.d,1,14,0,0,0
+26051403,"Fuoni",9,0,0,0,0,0,0,0,.d,1,14,0,0,0

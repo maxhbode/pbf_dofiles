@@ -1,0 +1,167 @@
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+PROJECT: 		PBF, Zanzibar, TZ
+ORGANIZATION:	MoH, SMZ
+PURPOSE: 		Calculate PBS subsidies
+PROGRAMMER:		Max Bode, Economist (maxbode.moh.smz@gmail.com)
+LAST MODIFIED: 	Feb 2014
+*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
+set linesize 225
+
+*---------------------------------------------------
+* Graph Options
+*---------------------------------------------------
+
+* Stop graphs
+loc GRAPHS 1
+
+* Choose format: pdf or png
+loc format pdf
+
+* Choose color scheme: s2color or s2mono
+loc scheme s2color 
+set scheme `scheme'  
+
+* General Graph Options
+#delimit ;
+loc graphoptions
+		graphregion(fcolor(white) lcolor(white) ilcolor(white))
+		xsize(9) ysize(5.5)
+		ylabel(, angle(horizontal)) missing
+		;
+#delimit cr
+
+* Create folder name
+if 		"`format'"=="pdf" 	loc formatf "high quality files"
+else if "`format'"=="png"	loc formatf "image files"
+
+if 		"`scheme'"=="s2color" 	loc schemef "color -"
+else if "`scheme'"=="s2mono"	loc schemef "greyscale -"
+
+loc folder "`schemef' `formatf' (`format')"
+
+************************************************************************
+* Extract Local
+************************************************************************
+
+u "$CLEAN/pp02_13q4(pay_m)", clear
+fn pp_v_* pp_p_*, loc(varlist)
+
+************************************************************************
+* METHOD I: Performance Pay per Quarter
+************************************************************************
+
+u "$CLEAN/pp02_13q4(pay_m)", clear
+
+
+foreach var in `varlist' {
+	loc newvar : subinstr loc var "_m_" "_q_"
+	loc newvarlist `newvarlist' `newvar'
+
+	di as result "`newvar' = `var'"
+	
+	bys id_phcu: egen temp = total(`var')
+	bys id_phcu: egen `newvar' = max(temp)
+	
+	drop temp
+}
+
+* Drop obs
+bys id_phcu: g n = _n
+keep if n==1
+
+* Drop vars
+fn *, remove(id_phcu `newvarlist')
+drop `r(varlist)'
+
+* Save
+ren pp* c_pp*
+sa "$TEMP/Method1", replace
+
+************************************************************************
+* METHOD II: Performance Pay per Quarter
+************************************************************************
+
+u "$CLEAN/pp04_14q1(pay_m)", clear
+collapse (sum) `varlist', by(id_phcu)
+ren *_m_* *_q_*
+merge 1:1 id_phcu using "$CLEAN/PHCU_IDs", nogen
+drop id1 id2 id3 id4
+drop id_district_name id_zone_name
+order id*
+
+* Save
+sa "$TEMP/Method2", replace
+
+************************************************************************
+* Compare Method I & II
+************************************************************************
+
+u "$TEMP/Method1", clear
+merge 1:1 id_phcu using "$TEMP/Method2", nogen
+order id* 
+
+fn pp* 
+foreach var in `r(varlist)' {
+	compare `var' c_`var'
+}
+
+************************************************************************
+* Inpect data
+************************************************************************
+
+u "$TEMP/Method2", clear
+
+su pp*
+
+************************************************************************
+* Inpect data
+************************************************************************
+
+fn *_tzs 
+foreach var in `r(varlist)' {
+	g `var'6 = `var'/10^6
+}
+	
+************************************************************************
+* Save
+************************************************************************
+
+preserve
+keep id_phcu id_zone id_phcu_name pp_v*_tzs 
+*drop *tzs6
+
+qui compress
+sa "$TEMP/pp04a_13q4(pif_q)", replace
+restore 
+
+************************************************************************
+* Graph
+************************************************************************
+
+if `GRAPHS'==0 STOP
+
+* Install value Labels
+run "$DO/01c_valuelabels_graphs.do"
+
+#delimit ;
+graph hbar pp_v_phcu_q_tzs6 pp_p_phcu_q_tzs6 if id_zone==1, over(id_phcu_name, 
+	sort(pp_v_phcu_q_tzs6)) 
+	ytitle(Million TZS) 
+	legend(on order(1 "Verifiable" 2 "Potential (all quality)"))
+	`graphoptions' ylabel(#10) ;
+#delimit cr
+* title(2014 Quarter 1: Performance Pay per Facility (Mkoani, Pemba))
+graph export "$GRAPH/`folder'/performance pay/2014_q1_pp_byfacility_pemba.`format'", replace
+stop
+#delimit ;
+graph hbar pp_v_phcu_q_tzs6 pp_p_phcu_q_tzs6 if id_zone==2, over(id_phcu_name, 
+	sort(pp_v_phcu_q_tzs6)) 
+	ytitle(Million TZS) 
+	legend(on order(1 "Verifiable" 2 "Potential (all quality)"))
+	`graphoptions' ylabel(#10) ;
+#delimit cr
+* title(2014 Quarter 1: Performance Pay per Facility (West, Unguja)) 
+graph export "$GRAPH/`folder'/performance pay/2014_q1_pp_byfacility_unguja.`format'", replace
+	
+

@@ -1,0 +1,124 @@
+
+/*
+
+u "$CLEAN/de01(merge)", clear
+*/
+
+* OVERALL: Merge in old data
+
+set linesize 225
+
+u "$RAW/verification_2013q3", clear
+
+
+*******************************************************************************
+* Rename
+*******************************************************************************
+
+* 1st Rename
+ren v04a_verification_period_m id_period_mm 
+ren v04b_verification_period_y id_period_yyyy
+ren b* c*
+ren a* b* 
+
+* Drop
+keep id* b* c*
+
+* 2nd Rename
+fn b* c*
+foreach var in `r(varlist)' {
+	loc newvar = substr("`var'",1,5)
+	ren `var' `newvar'
+}
+
+
+* Renaming Variables 
+ren *ir *_ir_t // in registry - Just September (9) = total
+
+ren *or *_r_t // overall reported = reported total
+ren *gr *_r_g // guidlines reported = reported total
+
+ren *ov *_v_t // overall verified = verfiable total
+ren *gv *_v_g // guidlines verified = verfiable guidlines
+
+*******************************************************************************
+* Unique ID
+*******************************************************************************
+
+g id_phcu_ym = (id_phcu*100+13)*100+id_period_mm
+cb id_phcu_ym
+
+*******************************************************************************
+* Correcting values
+*******************************************************************************
+
+fn *
+mvdecode `r(varlist)', mv(-999=.a \ -998=.b \ -997=.c \ -996=.d \ -995=.d)
+
+
+*******************************************************************************
+* 
+*******************************************************************************
+
+/*
+la de missingl 0 "ok" 1 "missing"
+
+foreach type in ov or ir {
+
+	fn *_`type'
+	foreach var in `r(varlist)' {
+		g mv_`var' = 0
+		replace mv_`var' = 1 if `var'>=.
+		la val mv_`var' missingl
+	}
+}
+
+
+*******************************************************************************
+* Constructing total number of cases 
+*******************************************************************************
+ 
+* Comparing "In registry" & "Reported" 
+forval i = 1/5 {
+	g ratio_b0`i' = b0`i'_or/b0`i'_ir  if id_period_mm==9 &  b0`i'_ir>=. & b0`i'_or>=.
+	ta ratio_b0`i'
+}
+ stop
+* Creating new total
+la de tdatasourcel 1 "Registry" 2 "Reported" 3 "Missing"
+ 
+forval i = 1/5 {
+	
+	g b0`i'_t = b0`i'_ir
+	g b0`i'_ds = 1 
+	
+	replace b0`i'_t = b0`i'_or if b0`i'_ir>=.
+	replace b0`i'_ds = 2  if b0`i'_ir>=.
+	
+	replace b0`i'_ds = 3 if b0`i'_ir>=. & b0`i'_or>=.
+	la val b0`i'_ds tdatasourcel
+	
+	ta b0`i'_ds 
+}
+
+*/ 
+
+
+*******************************************************************************
+* Merge in old data
+*******************************************************************************
+
+ta id_period_mm 
+
+*******************************************************************************
+* Save
+*******************************************************************************
+
+qui compress
+sa "$CLEAN/dea02(rename)", replace
+
+
+
+
+
+

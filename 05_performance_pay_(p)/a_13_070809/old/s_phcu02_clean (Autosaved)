@@ -1,0 +1,65 @@
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+PROJECT: 		PBF, Zanzibar, TZ
+ORGANIZATION:	MoH, SMZ
+PURPOSE: 		Calculate PBS subsidies
+PROGRAMMER:		Max Bode, Economist (maxbode.moh.smz@gmail.com)
+LAST MODIFIED: 	Sep 2013
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+OVERVIEW
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+(01) ...
+	
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+CONTROL PANEL
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
+*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+set more off
+set linesize 100
+
+u "$RAW/verification_201307", clear
+
+************************************************************************
+* (01) Dates
+************************************************************************
+
+* Period of verification
+g verification_period_ym = ym(verification_period_y,verification_period_m)
+format %tm verification_period_ym
+la var verification_period_ym "Period of verification"
+
+*  Date of verification visit (verification_date_d)
+g visit_date_ym = ym(visit_date_y,visit_date_m)
+format %tm visit_date_ym
+la var visit_date_ym "Date of verification visit"
+
+order visit* verification_*, after(id_phcu_name) alpha
+
+************************************************************************
+* (0x) Save
+************************************************************************
+
+qui compress
+sa "$TEMP/s_phcu02_clean", replace
+
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+* Notes
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+* Basis of the ID:
+Categories are sorted alphabetically:
+ID = Island ID [1,2] + District ID [1,6] by Island + PHUC ID by District
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
+
+*===========================================================
+* (01.a) Dates
+*===========================================================
+
+* ...
+*---------------------------------------------------

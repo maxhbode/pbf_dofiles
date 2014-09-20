@@ -1,0 +1,80 @@
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+PROJECT: 		PBF, Zanzibar, TZ
+ORGANIZATION:	MoH, SMZ
+PURPOSE: 		Calculate PBS subsidies
+PROGRAMMER:		Max Bode, Economist (maxbode.moh.smz@gmail.com)
+LAST MODIFIED: 	Sep 2013
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+OVERVIEW
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+(01) ...
+	
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+CONTROL PANEL
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
+
+*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+set more off
+set linesize 100
+
+u "$TEMP/s_phcu02_merge", clear
+
+************************************************************************
+* Systematic treating of missing values
+************************************************************************
+
+
+
+
+************************************************************************
+* (01) Dates
+************************************************************************
+
+bys verification_period_m: su pm01or_opd_newconsul_N pm01ov_opd_newconsul_N
+bys verification_period_m: su pm01gr_opd_newconsul_N pm01gv_opd_newconsul_N
+
+bys verification_period_m: su pm01or_opd_newconsul_N pm01gr_opd_newconsul_N
+
+* training (verified)
+bys verification_period_m: su pm01ov_opd_newconsul_N pm01gv_opd_newconsul_N
+
+*g test2 = pm01or_opd_newconsul_N/pm01ov_opd_newconsul_N
+
+g testo =pm01gv_opd_newconsul_N/pm01ov_opd_newconsul_N
+
+* ---------- phone numbers  -------------*
+* overview, verified (number of phone numbers improved). 
+* 150 cases in Aug, 105 cases in July --> 30% improvment
+ttest pm01ov_opd_newconsul_N, by(verification_period_m) level(90)
+*-ttest test2, by(verification_period_m) level(90)
+
+* ---------- verification -------------*
+ttest testo, by(verification_period_m) level(90)
+* 31% of the cases with phone numbers followed the guidlines in July 
+* 40% of the cases with phone numbers followed the guidlines in August
+* That's a 22.5 % increase (almost 25 %) 
+by verification_period_m: list id_district id_phcu_name  testo, noobs
+
+su testo
+
+************************************************************************
+* (0x) Save
+************************************************************************
+
+qui compress
+sa "$TEMP/s_phcu03_clean", replace
+
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+* Notes
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+* Basis of the ID:
+Categories are sorted alphabetically:
+ID = Island ID [1,2] + District ID [1,6] by Island + PHUC ID by District
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
